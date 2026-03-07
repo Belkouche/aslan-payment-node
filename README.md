@@ -18,15 +18,15 @@ Official Aslan Payment SDK for Node.js. Accept payments, create checkout session
 ## Installation
 
 ```bash
-npm install @aslan/payment-node
+npm install github:Belkouche/aslan-payment-node
 ```
 
 ```bash
-yarn add @aslan/payment-node
+yarn add github:Belkouche/aslan-payment-node
 ```
 
 ```bash
-pnpm add @aslan/payment-node
+pnpm add github:Belkouche/aslan-payment-node
 ```
 
 ## Quick Start
