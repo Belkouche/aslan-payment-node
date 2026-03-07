@@ -150,6 +150,24 @@ export interface ListPaymentLinksParams {
   status?: 'active' | 'inactive' | 'expired';
 }
 
+export interface UpdatePaymentLinkParams {
+  description?: string;
+  status?: 'active' | 'inactive';
+  maxPayments?: number | null;
+  expiresAt?: Date | string | null;
+  metadata?: Record<string, string>;
+}
+
+export interface QRCodeResult {
+  dataUri: string;
+  mimeType: string;
+}
+
+export interface QRCodeParams {
+  format?: 'png' | 'svg';
+  size?: number;
+}
+
 // ── Refunds ──
 
 export interface CreateRefundParams {
@@ -159,12 +177,19 @@ export interface CreateRefundParams {
   reason?: string;
 }
 
+export interface ListRefundsParams {
+  page?: number;
+  pageSize?: number;
+  status?: 'pending' | 'approved' | 'processing' | 'succeeded' | 'failed' | 'rejected';
+  transactionId?: string;
+}
+
 export interface Refund {
   id: string;
   transactionId: string;
   amount: number;
   currency: string;
-  status: 'pending' | 'succeeded' | 'failed';
+  status: 'pending' | 'approved' | 'processing' | 'succeeded' | 'failed' | 'rejected';
   reason?: string;
   createdAt: string;
 }

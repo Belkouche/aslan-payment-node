@@ -13,9 +13,13 @@ export type {
   ListTransactionsParams,
   PaginatedResponse,
   CreatePaymentLinkParams,
+  UpdatePaymentLinkParams,
   PaymentLink,
   ListPaymentLinksParams,
+  QRCodeResult,
+  QRCodeParams,
   CreateRefundParams,
+  ListRefundsParams,
   Refund,
   WebhookEvent,
 } from './types.js';
