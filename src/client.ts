@@ -4,6 +4,10 @@ import { Transactions } from './resources/transactions.js';
 import { PaymentLinks } from './resources/payment-links.js';
 import { Refunds } from './resources/refunds.js';
 import { Webhooks } from './resources/webhooks.js';
+import { Vendors } from './resources/vendors.js';
+import { Customers } from './resources/customers.js';
+import { ApiKeys } from './resources/api-keys.js';
+import { WebhooksConfig } from './resources/webhooks-config.js';
 import type { AslanConfig } from './types.js';
 
 const DEFAULT_BASE_URL = 'https://api.aslanpay.ma/pay';
@@ -15,6 +19,10 @@ export class Aslan {
   readonly transactions: Transactions;
   readonly paymentLinks: PaymentLinks;
   readonly refunds: Refunds;
+  readonly vendors: Vendors;
+  readonly customers: Customers;
+  readonly apiKeys: ApiKeys;
+  readonly webhooksConfig: WebhooksConfig;
 
   private readonly config: Required<AslanConfig>;
 
@@ -34,6 +42,10 @@ export class Aslan {
     this.transactions = new Transactions(this.config);
     this.paymentLinks = new PaymentLinks(this.config);
     this.refunds = new Refunds(this.config);
+    this.vendors = new Vendors(this.config);
+    this.customers = new Customers(this.config);
+    this.apiKeys = new ApiKeys(this.config);
+    this.webhooksConfig = new WebhooksConfig(this.config);
   }
 
   get isTestMode(): boolean {

@@ -38,7 +38,7 @@ export async function httpRequest<T>(options: HttpRequestOptions): Promise<T> {
   const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${secretKey}`,
-    'User-Agent': '@aslan/payment-node/0.1.0',
+    'User-Agent': '@aslan/payment-node/0.2.0',
     ...headers,
   };
 

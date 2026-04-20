@@ -1,5 +1,5 @@
 import { httpRequest } from '../http.js';
-import type { AslanConfig, CreateCheckoutSessionParams, CheckoutSession } from '../types.js';
+import type { AslanConfig, CreateCheckoutSessionParams, CheckoutSession, CheckoutSessionDetail } from '../types.js';
 
 export class CheckoutSessions {
   constructor(private config: Required<AslanConfig>) {}
@@ -26,6 +26,10 @@ export class CheckoutSessions {
         shipping_address: params.shippingAddress,
         line_items: params.lineItems,
         metadata: params.metadata,
+        sellers: params.sellers,
+        browser_info: params.browserInfo,
+        require_3ds: params.require3ds,
+        vendor_id: params.vendorId,
       },
       headers,
       secretKey: this.config.secretKey,
@@ -35,8 +39,8 @@ export class CheckoutSessions {
     });
   }
 
-  async retrieve(id: string): Promise<CheckoutSession> {
-    return httpRequest<CheckoutSession>({
+  async retrieve(id: string): Promise<CheckoutSessionDetail> {
+    return httpRequest<CheckoutSessionDetail>({
       method: 'GET',
       path: `/api/v1/checkout/sessions/${encodeURIComponent(id)}`,
       secretKey: this.config.secretKey,

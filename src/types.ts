@@ -13,6 +13,16 @@ export interface AslanConfig {
 
 // ── Checkout Sessions ──
 
+export interface CheckoutSessionSeller {
+  id: string;
+  name: string;
+  email?: string;
+  /** Commission in basis points (0-10000) */
+  commissionRate?: number;
+  fixedFee?: number;
+  metadata?: Record<string, string>;
+}
+
 export interface CreateCheckoutSessionParams {
   /** Amount in centimes (100 = 1.00 MAD). Min: 100, Max: 100,000,000 */
   amount: number;
@@ -31,6 +41,10 @@ export interface CreateCheckoutSessionParams {
   shippingAddress?: ShippingAddress;
   lineItems?: LineItem[];
   metadata?: Record<string, string>;
+  sellers?: CheckoutSessionSeller[];
+  browserInfo?: Record<string, unknown>;
+  require3ds?: boolean;
+  vendorId?: string;
 }
 
 export interface Address {
@@ -66,7 +80,19 @@ export interface CheckoutSession {
   amount: number;
   currency: string;
   status: string;
+  openAmount: boolean;
   metadata?: Record<string, string>;
+}
+
+export interface CheckoutSessionDetail extends CheckoutSession {
+  successUrl: string;
+  cancelUrl: string;
+  customerEmail?: string;
+  customerName?: string;
+  brandName?: string;
+  merchantName?: string;
+  theme?: Record<string, unknown>;
+  transaction?: Transaction;
 }
 
 // ── Transactions ──
@@ -121,19 +147,24 @@ export interface PaginatedResponse<T> {
 // ── Payment Links ──
 
 export interface CreatePaymentLinkParams {
-  /** Amount in centimes */
-  amount: number;
+  /** Amount in centimes. Omit or set null for open-amount links */
+  amount?: number | null;
   currency?: 'MAD';
   description?: string;
   maxPayments?: number;
   expiresAt?: Date | string;
   metadata?: Record<string, string>;
+  /** Minimum amount in centimes (for open-amount links) */
+  minAmount?: number;
+  /** Maximum amount in centimes (for open-amount links) */
+  maxAmount?: number;
+  vendorId?: string;
 }
 
 export interface PaymentLink {
   id: string;
   url: string;
-  amount: number;
+  amount: number | null;
   currency: string;
   description?: string;
   status: 'active' | 'inactive' | 'expired';
@@ -192,6 +223,112 @@ export interface Refund {
   status: 'pending' | 'approved' | 'processing' | 'succeeded' | 'failed' | 'rejected';
   reason?: string;
   createdAt: string;
+}
+
+// ── Vendors ──
+
+export interface Vendor {
+  id: string;
+  externalId: string | null;
+  name: string;
+  email: string | null;
+  commissionRate: number | null;
+  isActive: boolean;
+  metadata: Record<string, string> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVendorParams {
+  name: string;
+  externalId?: string;
+  email?: string;
+  /** Commission as a decimal (0-1, e.g. 0.05 = 5%) */
+  commissionRate?: number;
+  metadata?: Record<string, string>;
+}
+
+export interface UpdateVendorParams {
+  name?: string;
+  email?: string | null;
+  commissionRate?: number | null;
+  externalId?: string | null;
+  isActive?: boolean;
+  metadata?: Record<string, string>;
+}
+
+export interface ListVendorsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isActive?: boolean;
+}
+
+export interface VendorListResponse {
+  data: Vendor[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// ── Customers ──
+
+export interface Customer {
+  id: string;
+  email: string | null;
+  name: string | null;
+  phone: string | null;
+  createdAt: string;
+  transactionCount: number;
+  totalSpent: number;
+}
+
+export interface ListCustomersParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: 'createdAt' | 'email' | 'name';
+  sortOrder?: 'asc' | 'desc';
+}
+
+// ── ApiKeys ──
+
+export interface ApiKey {
+  id: string;
+  name: string;
+  type: 'live' | 'test';
+  prefix: string;
+  publishableKey: string;
+  /** Only present on creation */
+  secretKey?: string;
+  createdAt: string;
+}
+
+export interface CreateApiKeyParams {
+  name: string;
+  type: 'live' | 'test';
+}
+
+// ── WebhookConfig ──
+
+export type WebhookEventType =
+  | 'payment.succeeded'
+  | 'payment.failed'
+  | 'payment.expired'
+  | 'refund.created'
+  | 'refund.updated';
+
+export interface WebhookConfig {
+  url: string;
+  /** Masked on GET */
+  secret: string;
+  events: WebhookEventType[];
+}
+
+export interface UpdateWebhookConfigParams {
+  url: string;
+  events?: WebhookEventType[];
 }
 
 // ── Webhooks ──
