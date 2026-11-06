@@ -26,6 +26,7 @@ export class PaymentLinks {
         min_amount: params.minAmount,
         max_amount: params.maxAmount,
         vendor_id: params.vendorId,
+        providerAccount: params.providerAccount,
       },
       headers,
       secretKey: this.config.secretKey,

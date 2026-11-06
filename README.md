@@ -136,6 +136,12 @@ const session = await aslan.checkoutSessions.create({
 // session.status    - Current session status
 ```
 
+To process on one of your additional PSP accounts, pass its alias as `providerAccount` (omit it or use `'default'` for the default account). This also works on `paymentLinks.create`. Responses carry `providerAccount` too.
+
+```typescript
+await aslan.checkoutSessions.create({ amount: 10000, successUrl, cancelUrl, providerAccount: 'foreign' });
+```
+
 #### `checkoutSessions.retrieve(id)`
 
 ```typescript
@@ -339,6 +345,10 @@ try {
 | `IDEMPOTENCY_ERROR` | 409 | Conflicting idempotency key reuse |
 | `NETWORK_ERROR` | -- | Connection failure or timeout |
 | `SERVER_ERROR` | 5xx | Aslan server error (retried automatically) |
+| `PROVIDER_ACCOUNT_NOT_FOUND` | 400 | `providerAccount` names no account of your merchant |
+| `PROVIDER_ACCOUNT_INACTIVE` | 400 | The `providerAccount` is deactivated |
+| `PROVIDER_ACCOUNT_UNSUPPORTED` | 400 | The account's provider cannot take this request |
+| `PROVIDER_ACCOUNT_RECURRING_DISABLED` | 400 | The account does not allow recurring payments |
 
 ---
 
@@ -436,7 +446,11 @@ type AslanErrorCode =
   | 'RATE_LIMITED'
   | 'IDEMPOTENCY_ERROR'
   | 'NETWORK_ERROR'
-  | 'SERVER_ERROR';
+  | 'SERVER_ERROR'
+  | 'PROVIDER_ACCOUNT_NOT_FOUND'
+  | 'PROVIDER_ACCOUNT_INACTIVE'
+  | 'PROVIDER_ACCOUNT_UNSUPPORTED'
+  | 'PROVIDER_ACCOUNT_RECURRING_DISABLED';
 
 interface WebhookEvent {
   id: string;

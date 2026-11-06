@@ -116,6 +116,7 @@ export async function httpRequest<T>(options: HttpRequestOptions): Promise<T> {
 function mapErrorCode(status: number, serverCode?: string): AslanErrorCode {
   if (serverCode === 'VALIDATION_ERROR') return 'VALIDATION_ERROR';
   if (serverCode === 'IDEMPOTENCY_ERROR') return 'IDEMPOTENCY_ERROR';
+  if (serverCode?.startsWith('PROVIDER_ACCOUNT_')) return serverCode as AslanErrorCode;
   switch (status) {
     case 401: return 'AUTHENTICATION_ERROR';
     case 403: return 'AUTHORIZATION_ERROR';

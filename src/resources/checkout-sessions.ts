@@ -30,6 +30,7 @@ export class CheckoutSessions {
         browser_info: params.browserInfo,
         require_3ds: params.require3ds,
         vendor_id: params.vendorId,
+        providerAccount: params.providerAccount,
       },
       headers,
       secretKey: this.config.secretKey,
