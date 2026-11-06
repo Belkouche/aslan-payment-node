@@ -339,9 +339,10 @@ try {
 |------|-------------|-------------|
 | `AUTHENTICATION_ERROR` | 401 | Invalid or missing API key |
 | `AUTHORIZATION_ERROR` | 403 | Key does not have permission for this action |
-| `VALIDATION_ERROR` | 422 | Invalid request parameters |
+| `VALIDATION_ERROR` | 400 / 422 | Invalid request parameters |
 | `NOT_FOUND` | 404 | Requested resource does not exist |
 | `RATE_LIMITED` | 429 | Too many requests -- back off and retry |
+| `CONFLICT` | 409 | Resource conflict (e.g. duplicate resource) |
 | `IDEMPOTENCY_ERROR` | 409 | Conflicting idempotency key reuse |
 | `NETWORK_ERROR` | -- | Connection failure or timeout |
 | `SERVER_ERROR` | 5xx | Aslan server error (retried automatically) |
@@ -443,6 +444,7 @@ type AslanErrorCode =
   | 'AUTHORIZATION_ERROR'
   | 'VALIDATION_ERROR'
   | 'NOT_FOUND'
+  | 'CONFLICT'
   | 'RATE_LIMITED'
   | 'IDEMPOTENCY_ERROR'
   | 'NETWORK_ERROR'

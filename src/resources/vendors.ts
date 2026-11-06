@@ -1,4 +1,4 @@
-import { httpRequest } from '../http.js';
+import { httpRequest, requestData } from '../http.js';
 import type {
   AslanConfig,
   Vendor,
@@ -12,14 +12,14 @@ export class Vendors {
   constructor(private config: Required<AslanConfig>) {}
 
   async create(params: CreateVendorParams): Promise<Vendor> {
-    return httpRequest<Vendor>({
+    return requestData<Vendor>({
       method: 'POST',
       path: '/api/v1/vendors',
       body: {
         name: params.name,
-        external_id: params.externalId,
+        externalId: params.externalId,
         email: params.email,
-        commission_rate: params.commissionRate,
+        commissionRate: params.commissionRate,
         metadata: params.metadata,
       },
       secretKey: this.config.secretKey,
@@ -30,7 +30,7 @@ export class Vendors {
   }
 
   async retrieve(id: string): Promise<Vendor> {
-    return httpRequest<Vendor>({
+    return requestData<Vendor>({
       method: 'GET',
       path: `/api/v1/vendors/${encodeURIComponent(id)}`,
       secretKey: this.config.secretKey,
@@ -46,7 +46,7 @@ export class Vendors {
       if (params.page !== undefined) query.page = params.page;
       if (params.limit !== undefined) query.limit = params.limit;
       if (params.search) query.search = params.search;
-      if (params.isActive !== undefined) query.is_active = String(params.isActive);
+      if (params.isActive !== undefined) query.isActive = String(params.isActive);
     }
 
     return httpRequest<VendorListResponse>({
@@ -64,12 +64,12 @@ export class Vendors {
     const body: Record<string, unknown> = {};
     if (params.name !== undefined) body.name = params.name;
     if (params.email !== undefined) body.email = params.email;
-    if (params.commissionRate !== undefined) body.commission_rate = params.commissionRate;
-    if (params.externalId !== undefined) body.external_id = params.externalId;
-    if (params.isActive !== undefined) body.is_active = params.isActive;
+    if (params.commissionRate !== undefined) body.commissionRate = params.commissionRate;
+    if (params.externalId !== undefined) body.externalId = params.externalId;
+    if (params.isActive !== undefined) body.isActive = params.isActive;
     if (params.metadata !== undefined) body.metadata = params.metadata;
 
-    return httpRequest<Vendor>({
+    return requestData<Vendor>({
       method: 'PATCH',
       path: `/api/v1/vendors/${encodeURIComponent(id)}`,
       body,

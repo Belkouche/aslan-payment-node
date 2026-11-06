@@ -1,4 +1,4 @@
-import { httpRequest } from '../http.js';
+import { httpRequest, requestData } from '../http.js';
 import type { AslanConfig, CreatePaymentLinkParams, UpdatePaymentLinkParams, PaymentLink, ListPaymentLinksParams, PaginatedResponse, QRCodeParams, QRCodeResult } from '../types.js';
 
 export class PaymentLinks {
@@ -13,19 +13,19 @@ export class PaymentLinks {
       headers['Idempotency-Key'] = options.idempotencyKey;
     }
 
-    return httpRequest<PaymentLink>({
+    return requestData<PaymentLink>({
       method: 'POST',
       path: '/api/v1/payment-links',
       body: {
         amount: params.amount,
         currency: params.currency ?? 'MAD',
         description: params.description,
-        max_payments: params.maxPayments,
-        expires_at: params.expiresAt instanceof Date ? params.expiresAt.toISOString() : params.expiresAt,
+        maxPayments: params.maxPayments,
+        expiresAt: params.expiresAt instanceof Date ? params.expiresAt.toISOString() : params.expiresAt,
         metadata: params.metadata,
-        min_amount: params.minAmount,
-        max_amount: params.maxAmount,
-        vendor_id: params.vendorId,
+        minAmount: params.minAmount,
+        maxAmount: params.maxAmount,
+        vendorId: params.vendorId,
         providerAccount: params.providerAccount,
       },
       headers,
@@ -37,7 +37,7 @@ export class PaymentLinks {
   }
 
   async retrieve(id: string): Promise<PaymentLink> {
-    return httpRequest<PaymentLink>({
+    return requestData<PaymentLink>({
       method: 'GET',
       path: `/api/v1/payment-links/${encodeURIComponent(id)}`,
       secretKey: this.config.secretKey,
@@ -51,7 +51,7 @@ export class PaymentLinks {
     const query: Record<string, string | number | undefined> = {};
     if (params) {
       if (params.page !== undefined) query.page = params.page;
-      if (params.pageSize !== undefined) query.page_size = params.pageSize;
+      if (params.pageSize !== undefined) query.pageSize = params.pageSize;
       if (params.status) query.status = params.status;
     }
 
@@ -76,7 +76,7 @@ export class PaymentLinks {
     }
     if (params.metadata !== undefined) body.metadata = params.metadata;
 
-    return httpRequest<PaymentLink>({
+    return requestData<PaymentLink>({
       method: 'PATCH',
       path: `/api/v1/payment-links/${encodeURIComponent(id)}`,
       body,
@@ -103,15 +103,21 @@ export class PaymentLinks {
     if (params?.format) query.format = params.format;
     if (params?.size) query.size = params.size;
 
-    const response = await httpRequest<{ data: QRCodeResult }>({
-      method: 'GET',
+    const request = {
+      method: 'GET' as const,
       path: `/api/v1/payment-links/${encodeURIComponent(id)}/qr`,
       query,
       secretKey: this.config.secretKey,
       baseUrl: this.config.baseUrl,
       timeout: this.config.timeout,
       maxRetries: this.config.maxRetries,
-    });
-    return response.data;
+    };
+
+    // Without `format` the API returns `{ data: { dataUri, mimeType } }`; with it, the raw image bytes.
+    if (!params?.format) return requestData<QRCodeResult>(request);
+
+    const { body, contentType } = await httpRequest({ ...request, responseType: 'binary' });
+    const mimeType = contentType.split(';')[0].trim();
+    return { dataUri: `data:${mimeType};base64,${body.toString('base64')}`, mimeType };
   }
 }

@@ -11,22 +11,43 @@ interface HttpRequestOptions {
   baseUrl: string;
   timeout: number;
   maxRetries: number;
+  /** `binary` returns the raw body bytes and content type instead of parsing JSON. */
+  responseType?: 'json' | 'binary';
 }
 
-interface ApiErrorBody {
-  error?: {
-    code?: string;
-    message?: string;
-    details?: Record<string, unknown>;
-  };
+export interface BinaryResponse {
+  body: Buffer;
+  contentType: string;
 }
+
+interface ErrorFields {
+  code?: unknown;
+  message?: unknown;
+  details?: unknown;
+}
+
+/** Flat `{ statusCode, code, error, message, details? }` or legacy nested `{ error: { code, message, details } }`. */
+type ApiErrorBody = ErrorFields & { error?: unknown };
 
 const RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504]);
 
-export async function httpRequest<T>(options: HttpRequestOptions): Promise<T> {
-  const { method, path, body, query, headers, secretKey, baseUrl, timeout, maxRetries } = options;
+/** Joins base URL and path without dropping a base path such as `/pay`. */
+export function buildUrl(baseUrl: string, path: string): URL {
+  return new URL(`${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`);
+}
 
-  const url = new URL(path, baseUrl);
+/** Calls `httpRequest` and unwraps the `{ data: X }` envelope. */
+export async function requestData<T>(options: HttpRequestOptions): Promise<T> {
+  const response = await httpRequest<{ data: T }>(options);
+  return response.data;
+}
+
+export async function httpRequest(options: HttpRequestOptions & { responseType: 'binary' }): Promise<BinaryResponse>;
+export async function httpRequest<T>(options: HttpRequestOptions): Promise<T>;
+export async function httpRequest<T>(options: HttpRequestOptions): Promise<T | BinaryResponse> {
+  const { method, path, body, query, headers, secretKey, baseUrl, timeout, maxRetries, responseType } = options;
+
+  const url = buildUrl(baseUrl, path);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined) {
@@ -77,9 +98,16 @@ export async function httpRequest<T>(options: HttpRequestOptions): Promise<T> {
         return undefined as T;
       }
 
-      let json: T & ApiErrorBody;
+      if (response.ok && responseType === 'binary') {
+        return {
+          body: Buffer.from(await response.arrayBuffer()),
+          contentType: response.headers.get('content-type') ?? 'application/octet-stream',
+        };
+      }
+
+      let json: unknown;
       try {
-        json = (await response.json()) as T & ApiErrorBody;
+        json = await response.json();
       } catch {
         throw new AslanError('SERVER_ERROR', `Unexpected response from server (${response.status})`, {
           httpStatus: response.status,
@@ -88,16 +116,17 @@ export async function httpRequest<T>(options: HttpRequestOptions): Promise<T> {
       }
 
       if (!response.ok) {
-        const errorBody = json as ApiErrorBody;
-        const code = mapErrorCode(response.status, errorBody.error?.code);
-        throw new AslanError(code, errorBody.error?.message ?? `Request failed with status ${response.status}`, {
+        const fields = extractErrorFields(json);
+        const serverCode = typeof fields.code === 'string' ? fields.code : undefined;
+        const message = typeof fields.message === 'string' ? fields.message : `Request failed with status ${response.status}`;
+        throw new AslanError(mapErrorCode(response.status, serverCode), message, {
           httpStatus: response.status,
-          details: errorBody.error?.details,
+          details: toDetails(fields.details),
           requestId,
         });
       }
 
-      return json;
+      return json as T;
     } catch (error: unknown) {
       if (error instanceof AslanError) throw error;
       if (error instanceof Error && error.name === 'AbortError') {
@@ -113,15 +142,41 @@ export async function httpRequest<T>(options: HttpRequestOptions): Promise<T> {
   throw lastError ?? new AslanError('NETWORK_ERROR', 'Request failed after retries');
 }
 
+function extractErrorFields(json: unknown): ErrorFields {
+  if (typeof json !== 'object' || json === null) return {};
+  const body = json as ApiErrorBody;
+  if (typeof body.error === 'object' && body.error !== null) return body.error as ErrorFields;
+  return body;
+}
+
+/** `details` may be an object or an array of `{ field, message }`; arrays are exposed as `{ errors: [...] }`. */
+function toDetails(details: unknown): Record<string, unknown> | undefined {
+  if (Array.isArray(details)) return { errors: details };
+  if (typeof details === 'object' && details !== null) return details as Record<string, unknown>;
+  return undefined;
+}
+
+const PASSTHROUGH_CODES = new Set<AslanErrorCode>([
+  'AUTHENTICATION_ERROR',
+  'AUTHORIZATION_ERROR',
+  'VALIDATION_ERROR',
+  'NOT_FOUND',
+  'CONFLICT',
+  'IDEMPOTENCY_ERROR',
+]);
+
 function mapErrorCode(status: number, serverCode?: string): AslanErrorCode {
-  if (serverCode === 'VALIDATION_ERROR') return 'VALIDATION_ERROR';
-  if (serverCode === 'IDEMPOTENCY_ERROR') return 'IDEMPOTENCY_ERROR';
-  if (serverCode?.startsWith('PROVIDER_ACCOUNT_')) return serverCode as AslanErrorCode;
+  if (serverCode) {
+    if (PASSTHROUGH_CODES.has(serverCode as AslanErrorCode)) return serverCode as AslanErrorCode;
+    if (serverCode.startsWith('IDEMPOTENCY_')) return 'IDEMPOTENCY_ERROR';
+    if (serverCode.startsWith('PROVIDER_ACCOUNT_')) return serverCode as AslanErrorCode;
+    if (serverCode === 'RATE_LIMIT_EXCEEDED') return 'RATE_LIMITED';
+  }
   switch (status) {
     case 401: return 'AUTHENTICATION_ERROR';
     case 403: return 'AUTHORIZATION_ERROR';
     case 404: return 'NOT_FOUND';
-    case 409: return 'IDEMPOTENCY_ERROR';
+    case 409: return 'CONFLICT';
     case 422: return 'VALIDATION_ERROR';
     case 429: return 'RATE_LIMITED';
     default: return status >= 500 ? 'SERVER_ERROR' : 'VALIDATION_ERROR';

@@ -1,11 +1,11 @@
-import { httpRequest } from '../http.js';
+import { requestData } from '../http.js';
 import type { AslanConfig, WebhookConfig, UpdateWebhookConfigParams } from '../types.js';
 
 export class WebhooksConfig {
   constructor(private config: Required<AslanConfig>) {}
 
   async update(params: UpdateWebhookConfigParams): Promise<WebhookConfig> {
-    return httpRequest<WebhookConfig>({
+    return requestData<WebhookConfig>({
       method: 'POST',
       path: '/api/v1/webhooks/config',
       body: {
@@ -20,7 +20,7 @@ export class WebhooksConfig {
   }
 
   async retrieve(): Promise<WebhookConfig> {
-    return httpRequest<WebhookConfig>({
+    return requestData<WebhookConfig>({
       method: 'GET',
       path: '/api/v1/webhooks/config',
       secretKey: this.config.secretKey,

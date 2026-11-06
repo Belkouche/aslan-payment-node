@@ -1,4 +1,4 @@
-import { httpRequest } from '../http.js';
+import { httpRequest, requestData } from '../http.js';
 import type { AslanConfig, CreateRefundParams, ListRefundsParams, Refund, PaginatedResponse } from '../types.js';
 
 export class Refunds {
@@ -13,11 +13,11 @@ export class Refunds {
       headers['Idempotency-Key'] = options.idempotencyKey;
     }
 
-    return httpRequest<Refund>({
+    return requestData<Refund>({
       method: 'POST',
       path: '/api/v1/refunds',
       body: {
-        transaction_id: params.transactionId,
+        transactionId: params.transactionId,
         amount: params.amount,
         reason: params.reason,
       },
@@ -30,7 +30,7 @@ export class Refunds {
   }
 
   async retrieve(id: string): Promise<Refund> {
-    return httpRequest<Refund>({
+    return requestData<Refund>({
       method: 'GET',
       path: `/api/v1/refunds/${encodeURIComponent(id)}`,
       secretKey: this.config.secretKey,

@@ -1,11 +1,11 @@
-import { httpRequest } from '../http.js';
+import { httpRequest, requestData } from '../http.js';
 import type { AslanConfig, Transaction, ListTransactionsParams, PaginatedResponse } from '../types.js';
 
 export class Transactions {
   constructor(private config: Required<AslanConfig>) {}
 
   async retrieve(id: string): Promise<Transaction> {
-    return httpRequest<Transaction>({
+    return requestData<Transaction>({
       method: 'GET',
       path: `/api/v1/transactions/${encodeURIComponent(id)}`,
       secretKey: this.config.secretKey,
@@ -19,12 +19,12 @@ export class Transactions {
     const query: Record<string, string | number | undefined> = {};
     if (params) {
       if (params.page !== undefined) query.page = params.page;
-      if (params.pageSize !== undefined) query.page_size = params.pageSize;
+      if (params.pageSize !== undefined) query.pageSize = params.pageSize;
       if (params.status) query.status = params.status;
       if (params.from) query.from = params.from instanceof Date ? params.from.toISOString() : params.from;
       if (params.to) query.to = params.to instanceof Date ? params.to.toISOString() : params.to;
-      if (params.sortBy) query.sort_by = params.sortBy;
-      if (params.sortOrder) query.sort_order = params.sortOrder;
+      if (params.sortBy) query.sortBy = params.sortBy;
+      if (params.sortOrder) query.sortOrder = params.sortOrder;
     }
 
     return httpRequest<PaginatedResponse<Transaction>>({

@@ -364,6 +364,7 @@ export type AslanErrorCode =
   | 'AUTHORIZATION_ERROR'
   | 'VALIDATION_ERROR'
   | 'NOT_FOUND'
+  | 'CONFLICT'
   | 'RATE_LIMITED'
   | 'IDEMPOTENCY_ERROR'
   | 'NETWORK_ERROR'
