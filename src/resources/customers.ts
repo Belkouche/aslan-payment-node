@@ -1,4 +1,4 @@
-import { httpRequest } from '../http.js';
+import { httpRequest, requestData } from '../http.js';
 import type { AslanConfig, Customer, ListCustomersParams, PaginatedResponse } from '../types.js';
 
 export class Customers {
@@ -8,10 +8,10 @@ export class Customers {
     const query: Record<string, string | number | undefined> = {};
     if (params) {
       if (params.page !== undefined) query.page = params.page;
-      if (params.pageSize !== undefined) query.page_size = params.pageSize;
+      if (params.pageSize !== undefined) query.pageSize = params.pageSize;
       if (params.search) query.search = params.search;
-      if (params.sortBy) query.sort_by = params.sortBy;
-      if (params.sortOrder) query.sort_order = params.sortOrder;
+      if (params.sortBy) query.sortBy = params.sortBy;
+      if (params.sortOrder) query.sortOrder = params.sortOrder;
     }
 
     return httpRequest<PaginatedResponse<Customer>>({
@@ -26,7 +26,7 @@ export class Customers {
   }
 
   async retrieve(id: string): Promise<Customer> {
-    return httpRequest<Customer>({
+    return requestData<Customer>({
       method: 'GET',
       path: `/api/v1/customers/${encodeURIComponent(id)}`,
       secretKey: this.config.secretKey,

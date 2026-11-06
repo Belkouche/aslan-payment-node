@@ -45,6 +45,8 @@ export interface CreateCheckoutSessionParams {
   browserInfo?: Record<string, unknown>;
   require3ds?: boolean;
   vendorId?: string;
+  /** Alias of an additional PSP account (`^[a-z0-9][a-z0-9-]{0,31}$`). Omit or `"default"` for the default account. */
+  providerAccount?: string;
 }
 
 export interface Address {
@@ -82,6 +84,8 @@ export interface CheckoutSession {
   status: string;
   openAmount: boolean;
   metadata?: Record<string, string>;
+  /** `"default"`, or the alias of the PSP account that processed/owns this object. */
+  providerAccount?: string;
 }
 
 export interface CheckoutSessionDetail extends CheckoutSession {
@@ -117,6 +121,8 @@ export interface Transaction {
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, string>;
+  /** `"default"`, or the alias of the PSP account that processed/owns this object. */
+  providerAccount?: string;
   customer?: {
     email?: string;
     name?: string;
@@ -159,6 +165,8 @@ export interface CreatePaymentLinkParams {
   /** Maximum amount in centimes (for open-amount links) */
   maxAmount?: number;
   vendorId?: string;
+  /** Alias of an additional PSP account (`^[a-z0-9][a-z0-9-]{0,31}$`). Omit or `"default"` for the default account. */
+  providerAccount?: string;
 }
 
 export interface PaymentLink {
@@ -173,6 +181,8 @@ export interface PaymentLink {
   expiresAt?: string;
   createdAt: string;
   metadata?: Record<string, string>;
+  /** `"default"`, or the alias of the PSP account that processed/owns this object. */
+  providerAccount?: string;
 }
 
 export interface ListPaymentLinksParams {
@@ -317,7 +327,14 @@ export type WebhookEventType =
   | 'payment.failed'
   | 'payment.expired'
   | 'refund.created'
-  | 'refund.updated';
+  | 'refund.updated'
+  | 'subscription.renewed'
+  | 'subscription.payment_failed'
+  | 'subscription.past_due'
+  | 'subscription.cancelled'
+  | 'subscription.plan_changed'
+  | 'subscription.plan_change_failed'
+  | 'subscription.renewal_suspended';
 
 export interface WebhookConfig {
   url: string;
@@ -347,7 +364,12 @@ export type AslanErrorCode =
   | 'AUTHORIZATION_ERROR'
   | 'VALIDATION_ERROR'
   | 'NOT_FOUND'
+  | 'CONFLICT'
   | 'RATE_LIMITED'
   | 'IDEMPOTENCY_ERROR'
   | 'NETWORK_ERROR'
-  | 'SERVER_ERROR';
+  | 'SERVER_ERROR'
+  | 'PROVIDER_ACCOUNT_NOT_FOUND'
+  | 'PROVIDER_ACCOUNT_INACTIVE'
+  | 'PROVIDER_ACCOUNT_UNSUPPORTED'
+  | 'PROVIDER_ACCOUNT_RECURRING_DISABLED';

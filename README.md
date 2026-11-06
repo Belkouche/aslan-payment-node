@@ -136,6 +136,12 @@ const session = await aslan.checkoutSessions.create({
 // session.status    - Current session status
 ```
 
+To process on one of your additional PSP accounts, pass its alias as `providerAccount` (omit it or use `'default'` for the default account). This also works on `paymentLinks.create`. Responses carry `providerAccount` too.
+
+```typescript
+await aslan.checkoutSessions.create({ amount: 10000, successUrl, cancelUrl, providerAccount: 'foreign' });
+```
+
 #### `checkoutSessions.retrieve(id)`
 
 ```typescript
@@ -333,12 +339,17 @@ try {
 |------|-------------|-------------|
 | `AUTHENTICATION_ERROR` | 401 | Invalid or missing API key |
 | `AUTHORIZATION_ERROR` | 403 | Key does not have permission for this action |
-| `VALIDATION_ERROR` | 422 | Invalid request parameters |
+| `VALIDATION_ERROR` | 400 / 422 | Invalid request parameters |
 | `NOT_FOUND` | 404 | Requested resource does not exist |
 | `RATE_LIMITED` | 429 | Too many requests -- back off and retry |
+| `CONFLICT` | 409 | Resource conflict (e.g. duplicate resource) |
 | `IDEMPOTENCY_ERROR` | 409 | Conflicting idempotency key reuse |
 | `NETWORK_ERROR` | -- | Connection failure or timeout |
 | `SERVER_ERROR` | 5xx | Aslan server error (retried automatically) |
+| `PROVIDER_ACCOUNT_NOT_FOUND` | 400 | `providerAccount` names no account of your merchant |
+| `PROVIDER_ACCOUNT_INACTIVE` | 400 | The `providerAccount` is deactivated |
+| `PROVIDER_ACCOUNT_UNSUPPORTED` | 400 | The account's provider cannot take this request |
+| `PROVIDER_ACCOUNT_RECURRING_DISABLED` | 400 | The account does not allow recurring payments |
 
 ---
 
@@ -433,10 +444,15 @@ type AslanErrorCode =
   | 'AUTHORIZATION_ERROR'
   | 'VALIDATION_ERROR'
   | 'NOT_FOUND'
+  | 'CONFLICT'
   | 'RATE_LIMITED'
   | 'IDEMPOTENCY_ERROR'
   | 'NETWORK_ERROR'
-  | 'SERVER_ERROR';
+  | 'SERVER_ERROR'
+  | 'PROVIDER_ACCOUNT_NOT_FOUND'
+  | 'PROVIDER_ACCOUNT_INACTIVE'
+  | 'PROVIDER_ACCOUNT_UNSUPPORTED'
+  | 'PROVIDER_ACCOUNT_RECURRING_DISABLED';
 
 interface WebhookEvent {
   id: string;

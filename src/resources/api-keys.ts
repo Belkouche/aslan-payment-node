@@ -1,11 +1,11 @@
-import { httpRequest } from '../http.js';
+import { httpRequest, requestData } from '../http.js';
 import type { AslanConfig, ApiKey, CreateApiKeyParams, PaginatedResponse } from '../types.js';
 
 export class ApiKeys {
   constructor(private config: Required<AslanConfig>) {}
 
   async create(params: CreateApiKeyParams): Promise<ApiKey> {
-    return httpRequest<ApiKey>({
+    return requestData<ApiKey>({
       method: 'POST',
       path: '/api/v1/api-keys',
       body: {
@@ -23,7 +23,7 @@ export class ApiKeys {
     const query: Record<string, string | number | undefined> = {};
     if (params) {
       if (params.page !== undefined) query.page = params.page;
-      if (params.pageSize !== undefined) query.page_size = params.pageSize;
+      if (params.pageSize !== undefined) query.pageSize = params.pageSize;
     }
 
     return httpRequest<PaginatedResponse<ApiKey>>({
